@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
 using namespace std;
 
@@ -9,12 +9,11 @@ int dimension;
 
 //int currFila = 0;
 //int currColumna = 0;
-int currReinas = 0;
+int currAmazonas = 0;
 //int initColumna = 0;
-int cantSoluciones = 0;
+//int cantSoluciones = 0;
 
 void funcMapeo();
-void initArray();
 void funcPedirPieza();
 int funcAgregarPieza(int fila, int columna);
 void funcRemoverPieza(int fila, int columna);
@@ -30,8 +29,10 @@ int funcReinaEnFila(int fila);
 
 // BACKTRACKING: n! soluciones
 
+int debug;
 int main()
-{		
+{	
+	debug = 0;
 	printf("Inserta la dimension: ");
 	scanf("%d", &dimension);
 	
@@ -41,33 +42,31 @@ int main()
 		scanf("%d", &dimension);
 	}*/
 	
-	if(dimension < 6 || dimension > 50)
+	if(dimension < 4 || dimension > 50)
 		return main();
-		
-	initArray();
-    return 1;
-}
-
-void initArray()
-{
-	memset(arrTablero, -1, sizeof(arrTablero));
+	
+	for(int i = 0; i < 50; i ++)
+	{
+		for(int j = 0; j < 50; j ++)
+		{
+			arrTablero[i][j] = -1;
+		}
+	}	
 	for(int i = 0; i < dimension; i ++)
 	{
 		for(int j = 0; j < dimension; j ++)
 		{
-			//arrTableroCount[i][j][1] = 0;
-			//arrTableroCount[i][j][0] = 0;
 			arrTablero[i][j] = 0;
 		}
 	}
-	//currFila = 0, currColumna = 0;
-	currReinas = 0;
+		
+	currAmazonas = 0;	
 	
-	EncontrarColumnaSegura(0);
-	//funcMapeo();
-	return;	
+	funcMapeo();
+	funcPedirPieza();
+	//EncontrarColumnaSegura(0);
+    return 1;
 }
-
 
 void funcMapeo()
 {
@@ -89,11 +88,13 @@ void funcMapeo()
 			{
 				printf("x ");
 			}
+			else
+				printf("? ");
 		}
 		printf("\t(%d;%d)\n",i,funcReinaEnFila(i));
 	}
 	printf("\n\n");
-	//funcPedirPieza();
+	funcPedirPieza();
 	return;
 }
 
@@ -111,7 +112,7 @@ void funcPedirPieza()
 	
 	if(coordenada[0] == -1 && coordenada[1] == -1)
 	{//clear
-		initArray();
+		main();
 	}
 	
 	if(remove == 1)
@@ -127,6 +128,8 @@ void funcPedirPieza()
 
 int funcReinaEnFila(int fila)
 {//Retorna el valor de la columna en el que se encuntra la reina en la fila
+	if(fila < 0 || fila > 50)
+		return -1;
 	
 	for(int i = 0; i < dimension; i ++)
 	{
@@ -150,24 +153,25 @@ int funcReinaEnFila(int fila)
 }*/
 
 void EncontrarColumnaSegura(int fila)
-{
+{	
+	if(fila < 0 || fila > dimension)
+		return;
+	
 	if(fila == dimension)
 	{
-		if(currReinas == dimension)
+		if(currAmazonas == dimension)
 		{
-			cantSoluciones ++;
-			printf("SOLUCION PARA %dx%d (%d reinas)", dimension, dimension, currReinas);
+			printf("SOLUCION PARA %dx%d (%d reinas encontradas en %d recursiones)", dimension, dimension, currAmazonas, debug);
 			funcMapeo();
 			main();
+			return;
 		}
-		else
-		{
-			printf("No se encontro solucion para %dx%d", dimension, dimension);
-			funcMapeo();
-			main();
-		}
+		printf("No se encontro solucion para %dx%d (%d recursiones efectuadas)", dimension, dimension, debug);
+		funcMapeo();
+		main();
 		return;
 	}
+	
 	for(int j = 0; j < dimension; j ++)
 	{
 		if(arrTablero[fila][j] == 0)
@@ -175,6 +179,13 @@ void EncontrarColumnaSegura(int fila)
 			funcAgregarPieza(fila, j);
 			EncontrarColumnaSegura(fila + 1);
 			funcRemoverPieza(fila, j);
+			debug ++;
+			
+			if(j == dimension-1 && fila == 0) //Esta por la ultima columna en la primera fila, ya intento todas las posibilidades, eso quiere decir que no hay solucion.
+			{
+				EncontrarColumnaSegura(dimension);
+				break;
+			}
 		}
 	}
 	return;
@@ -237,7 +248,7 @@ void EncontrarColumnaSegura(int fila)
 	arrTableroCount[currFila][currColumna][0] = currFila;
 	arrTableroCount[currFila][currColumna][1] = currColumna;
 	
-	if(currReinas-1 != currFila)
+	if(currAmazonas-1 != currFila)
 	{
 		//Por cada iteracion (cada vez que se analiza una fila), deberia haber una reina, si no la hay, significa que no se pudo seguir con la rama actual.
 		//Hay que volver atras y la ultima columna aumentarle + 1, si eso sigue fallando, hay que volver aun mas atras.	
@@ -266,7 +277,7 @@ void EncontrarColumnaSegura(int fila)
 	
 	if(currFila == dimension)
 	{//Ya se analizaron todas las filas posibles
-		if(currReinas == dimension)
+		if(currAmazonas == dimension)
 		{//Solucion encontrada
 			main();
 			return 1;
@@ -293,10 +304,10 @@ int funcVerificarPieza(int fila, int columna)
 {
 	//printf("\nfuncVerificarPieza(%d, %d)\n", fila, columna);
 	
-	if(fila > 50 || columna > 50)
+	if(fila > 50 || columna > 50 || fila < 0 || columna < 0)
 		return 0;
 	
-	if(arrTablero[fila][columna] >= 2)
+	if(arrTablero[fila][columna] >= 2 || arrTablero[fila][columna] == -1)
 		return 0;
 	
 	return 1;
@@ -307,7 +318,7 @@ void funcRemoverPieza(int fila, int columna)
 {
 	//printf("\nfuncRemoverPieza(%d, %d)\n", fila, columna);
 	
-	if(fila > 50 || columna > 50)
+	if(fila > 50 || columna > 50 || fila < 0 || columna < 0)
 		return;
 	
 	if(arrTablero[fila][columna] != 1)
@@ -317,7 +328,7 @@ void funcRemoverPieza(int fila, int columna)
 	}
 			
 	arrTablero[fila][columna] = 0;
-	currReinas --;
+	currAmazonas --;
 	
 	for(int i = 0; i < dimension; i ++)
 	{				
@@ -426,7 +437,7 @@ void funcRemoverPieza(int fila, int columna)
 		
 	}
 	
-	//funcMapeo();
+	funcMapeo();
 	return;
 }
 
@@ -435,18 +446,18 @@ int funcAgregarPieza(int fila, int columna)
 {
 	//printf("\nfuncAgregarPieza(%d, %d)\n", fila, columna);
 	
-	if(fila > 50 || columna > 50)
+	if(fila > 50 || columna > 50 || fila < 0 || columna < 0)
 		return 0;
 	
 	if(funcVerificarPieza(fila, columna) == 0)
 	{
 		printf("\nError: la pieza va a ser comida en las coordenadas (%d,%d).\n", fila, columna);
-		//funcMapeo();
+		funcMapeo();
 		return 0;
 	}	
 	
 	arrTablero[fila][columna] = 1;
-	currReinas ++;
+	currAmazonas ++;
 	
 	for(int i = 0; i < dimension; i ++)
 	{				
@@ -476,7 +487,7 @@ int funcAgregarPieza(int fila, int columna)
 				if(arrTablero[fila-i][i+columna] >= 2) 
 					arrTablero[fila-i][i+columna] ++;	
 				else
-					arrTablero[fila-i][i+columna] = 2;	
+					arrTablero[fila-i][i+columna] = 2;
 		
 		if(columna-i >= 0 && fila+i < dimension)
 			if(arrTablero[fila+i][columna-i] != 1)
@@ -490,7 +501,7 @@ int funcAgregarPieza(int fila, int columna)
 				if(arrTablero[fila-i][columna-i] >= 2)
 					arrTablero[fila-i][columna-i] ++;
 				else
-					arrTablero[fila-i][columna-i] = 2;		
+					arrTablero[fila-i][columna-i] = 2;
 			
 		//caballo L
 		if(fila + 2 < dimension && columna + 1 < dimension)
@@ -555,7 +566,7 @@ int funcAgregarPieza(int fila, int columna)
 		
 	}
 	
-	//funcMapeo();
+	funcMapeo();
 	return 1;
 }
 
